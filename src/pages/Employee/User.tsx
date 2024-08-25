@@ -1,6 +1,6 @@
 import { Button, ConfigProvider, Input, Modal, Space, Table } from 'antd';
 import { PageHeader } from '../../components';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DeleteFilled,
   EditFilled,
@@ -25,7 +25,7 @@ const { confirm } = Modal;
 
 const UsersDashboardPage = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const [singleUser, setSingleUser] = useState(null);
+  const [singleUser, setSingleUser] = useState<UserModel | null>(null);
 
   const [openModalEdit, setOpenModalEdit] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,6 @@ const UsersDashboardPage = () => {
   const [userList, setUserList] = useState<UserModel[]>([]);
 
   const [errCreate, setErrCreate] = useState(null);
-  const [errEdit, setErrEdit] = useState(null);
 
   const [searchText, setSearchText] = useState('');
   const [searchedColumn, setSearchedColumn] = useState('');
@@ -88,6 +87,7 @@ const UsersDashboardPage = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const deleteEmployee = async (idUser: number) => {
     try {
       await axios
@@ -177,10 +177,11 @@ const UsersDashboardPage = () => {
       <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
     ),
     onFilter: (value, record) =>
-      record[dataIndex]
-        .toString()
-        .toLowerCase()
-        .includes((value as string).toLowerCase()),
+      record[dataIndex] // Check if `record[dataIndex]` is defined
+        ? record[dataIndex]!.toString()
+            .toLowerCase()
+            .includes((value as string).toLowerCase())
+        : false,
     onFilterDropdownOpenChange: (visible) => {
       if (visible) {
         setTimeout(() => searchInput.current?.select(), 100);
@@ -243,13 +244,35 @@ const UsersDashboardPage = () => {
     },
   ];
 
-  const onSelectChange = (newSelectedRowKeys: number[]) => {
-    setSelectedRowKeys(newSelectedRowKeys);
+  type Key = string | number;
+
+  const onSelectChange = (newSelectedRowKeys: Key[]) => {
+    // Convert keys to numbers if necessary
+    const numberKeys = newSelectedRowKeys.map((key) => Number(key));
+    setSelectedRowKeys(numberKeys); // Assuming setSelectedRowKeys expects a number[]
   };
+
   const rowSelection = {
-    selectedRowKeys,
-    onChange: onSelectChange,
+    selectedRowKeys: selectedRowKeys.map((key) => Number(key)) as number[], // Ensure the keys are numbers
+    onChange: onSelectChange, // Use the adjusted onSelectChange function
   };
+
+  const showConfirmDeleteModal = useCallback(
+    (idUser: number[]) => {
+      confirm({
+        title: 'Xác nhận xóa?',
+        icon: <ExclamationCircleFilled />,
+        content: 'Bạn có muốn xóa nhân viên này không ?',
+        onOk() {
+          deleteEmployee(idUser[0]);
+        },
+        onCancel() {
+          console.log('Cancel');
+        },
+      });
+    },
+    [deleteEmployee]
+  );
 
   const dataSource = useMemo(() => {
     return userList?.map((item) => ({
@@ -277,7 +300,7 @@ const UsersDashboardPage = () => {
           <DeleteFilled
             style={{ fontSize: '20px' }}
             onClick={() => {
-              const idRemove = [];
+              const idRemove: number[] = [];
               idRemove.push(item.idUser);
               setSelectedRowKeys(idRemove);
               showConfirmDeleteModal(idRemove);
@@ -286,21 +309,7 @@ const UsersDashboardPage = () => {
         </div>
       ),
     }));
-  }, [userList]);
-
-  const showConfirmDeleteModal = (idUser: number[]) => {
-    confirm({
-      title: 'Xác nhận xóa?',
-      icon: <ExclamationCircleFilled />,
-      content: 'Bạn có muốn xóa nhân viên này không ?',
-      onOk() {
-        deleteEmployee(idUser[0]);
-      },
-      onCancel() {
-        console.log('Cancel');
-      },
-    });
-  };
+  }, [userList, showConfirmDeleteModal]);
 
   return (
     <div>
@@ -360,7 +369,6 @@ const UsersDashboardPage = () => {
         setOpen={setOpenModalEdit}
         singleData={singleUser}
         updateEmployee={updateEmployee}
-        error={errEdit}
         loading={loadingEdit}
       />
       <ModalCreate

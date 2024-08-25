@@ -1,5 +1,4 @@
 import UsersDashboardPage from './Employee/User.tsx';
-import SeatsDashboardPage from './Seat/Seat.tsx';
 
 import {
   Error404Page,
@@ -12,7 +11,6 @@ import {
 
 export {
   UsersDashboardPage,
-  SeatsDashboardPage,
   Error500Page,
   Error404Page,
   Error403Page,

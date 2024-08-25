@@ -27,8 +27,6 @@ import {
 } from './routes.ts';
 
 const DASHBOARD_ITEMS = [
-  { title: 'default', path: PATH_DASHBOARD.default },
-  { title: 'projects', path: PATH_DASHBOARD.projects },
   { title: 'ecommerce', path: PATH_DASHBOARD.ecommerce },
   { title: 'marketing', path: PATH_DASHBOARD.marketing },
   { title: 'social', path: PATH_DASHBOARD.social },
