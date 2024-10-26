@@ -27,7 +27,7 @@ function App() {
           token: {
             colorPrimary: COLOR['500'],
             borderRadius: 6,
-            fontFamily: 'Lato, sans-serif',
+            fontFamily: 'Cambria, MyCambria, serif',
           },
           components: {
             Breadcrumb: {

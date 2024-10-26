@@ -2,7 +2,9 @@ import { Button, ConfigProvider, Input, Modal, Space, Table } from 'antd';
 import { PageHeader } from '../../components';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  CustomerServiceOutlined,
   DeleteFilled,
+  DownloadOutlined,
   EditFilled,
   ExclamationCircleFilled,
   HomeOutlined,
@@ -20,6 +22,7 @@ import { URL_CONFIG } from '../../constants/routes';
 import { UserModel } from '../../model/UserModel';
 import { FilterDropdownProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
+import * as XLSX from 'xlsx';
 
 const { confirm } = Modal;
 
@@ -39,6 +42,7 @@ const UsersDashboardPage = () => {
 
   const [searchText, setSearchText] = useState('');
   const [searchedColumn, setSearchedColumn] = useState('');
+  const [open, setOpen] = useState(false);
   const searchInput = useRef<InputRef>(null);
 
   const onGetEmployee = async () => {
@@ -50,6 +54,27 @@ const UsersDashboardPage = () => {
     } catch (error) {
       console.log('err: ', error);
     }
+  };
+
+  const onChange = (checked: boolean) => {
+    setOpen(checked);
+  };
+
+  const exportToExcel = () => {
+    const customData = userList.map((item) => ({
+      '#': item.idUser,
+      'Vị trí ngồi': item.idSeat,
+      'Chức vụ': item.title,
+      'Tên nhân viên': item.nameUser,
+      'Mã nhân viên': item.msnv,
+      'Số điện thoại': item.phone,
+      'Địa chỉ email': item.email,
+      'Ngày sinh': item.birthday,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(customData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+    XLSX.writeFile(workbook, 'ThongTinNhanVien.xlsx');
   };
 
   const createEmployee = async (data: unknown) => {
@@ -359,11 +384,24 @@ const UsersDashboardPage = () => {
           <UsergroupDeleteOutlined /> Xóa nhiều nhân viên
         </Button>
       )}
-      <FloatButton
-        onClick={() => setOpenModalCreate(true)}
-        icon={<UserAddOutlined />}
-        style={{ bottom: 30, right: 30 }}
-      />
+      <FloatButton.Group
+        open={open}
+        trigger="click"
+        style={{ right: 24 }}
+        icon={<CustomerServiceOutlined />}
+        onClick={() => onChange(!open)}
+      >
+        <FloatButton
+          onClick={() => setOpenModalCreate(true)}
+          icon={<UserAddOutlined />}
+          style={{ bottom: 30, right: 30 }}
+        />
+        <FloatButton
+          onClick={() => exportToExcel()}
+          icon={<DownloadOutlined />}
+          style={{ bottom: 30, right: 30 }}
+        />
+      </FloatButton.Group>
       <ModalEdit
         open={openModalEdit}
         setOpen={setOpenModalEdit}
